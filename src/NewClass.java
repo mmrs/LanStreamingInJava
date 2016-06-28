@@ -9,5 +9,10 @@
  * @author Siyam
  */
 public class NewClass {
+
+    public NewClass(String msg) {
     
+        System.out.println(msg);
+    }
+   
 }

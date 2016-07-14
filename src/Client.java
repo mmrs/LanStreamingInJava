@@ -19,10 +19,12 @@ import java.util.logging.Logger;
  */
 public class Client {
 
+    Data data;
     public void runClient() {
         String serverName = "localhost";
         int port = 1234;
         AudioProcessor audioProcessor = new AudioProcessor();
+        
         try {
             System.out.println("CLIENT SITE");
             // System.out.println("Connecting to " + serverName + " on port " + port);
@@ -36,7 +38,7 @@ public class Client {
                 @Override
                 public void run() {
                     Scanner clinetScanner = new Scanner(System.in);
-                    
+
                     String msg = null;
 //                 while(clinetScanner.hasNextLine()){
 //                     try {
@@ -49,7 +51,7 @@ public class Client {
 //                         Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
 //                     }
 //             }
-            while(true){
+                    while (true) {
 //                Data data = audioProcessor.readTargetLine();
 //                        try {
 //                            out.write(data.targetData, 0, data.numBytesRead);
@@ -61,8 +63,23 @@ public class Client {
 //                        } catch (InterruptedException ex) {
 //                            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
 //                        }
-                
-            }
+
+                    }
+                }
+            }).start();
+                    new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while (true) {
+                        data = audioProcessor.readTargetLine();
+//                        audioProcessor.writeAudio();
+                        try {
+                            out.write(data.targetData, 0, data.numBytesRead);
+                            System.out.println("server : " + data.numBytesRead);
+                        } catch (IOException ex) {
+                            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
                 }
             }).start();
 
@@ -78,10 +95,11 @@ public class Client {
 //                System.out.println("Server: " + msg);
 
                 audioProcessor.readTargetLine();
-              in.read(audioProcessor.getTargetData(),0,audioProcessor.getNumBytesRead());
+                in.read(audioProcessor.getTargetData(), 0, audioProcessor.getNumBytesRead());
                 System.out.println("client :" + audioProcessor.getNumBytesRead());
-              audioProcessor.writeAudio();
+                audioProcessor.writeAudio();
             }
+      
 //            client.close();
         } catch (Exception e) {
             e.printStackTrace();

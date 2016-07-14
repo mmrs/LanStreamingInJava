@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author Siyam2
+ * @author Siyam
  */
 public class Server {
 

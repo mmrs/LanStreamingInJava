@@ -19,12 +19,15 @@ import java.util.logging.Logger;
  */
 public class Client {
 
+    Thread textIn, textOut, voiceIn, voiceOut;
     Data data;
+    String msg = null;
+    Scanner clientScanner;
+
     public void runClient() {
-        String serverName = "localhost";
+        String serverName = "192.168.0.102";
         int port = 1234;
         AudioProcessor audioProcessor = new AudioProcessor();
-        
         try {
             System.out.println("CLIENT SITE");
             // System.out.println("Connecting to " + serverName + " on port " + port);
@@ -32,74 +35,72 @@ public class Client {
             System.out.println("Just connected to "
                     + client.getRemoteSocketAddress());
 
-            OutputStream outToServer = client.getOutputStream();
-            DataOutputStream out = new DataOutputStream(outToServer);
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    Scanner clinetScanner = new Scanner(System.in);
+            DataOutputStream out = new DataOutputStream(client.getOutputStream());
+            DataInputStream in = new DataInputStream(client.getInputStream());
+            clientScanner = new Scanner(System.in);
 
-                    String msg = null;
-//                 while(clinetScanner.hasNextLine()){
-//                     try {
-//                         msg = clinetScanner.nextLine();
-//                         if(msg.equalsIgnoreCase("exit"))
-//                             break;
-//                         out.writeUTF(msg);
-//                         //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-//                     } catch (IOException ex) {
-//                         Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
-//                     }
-//             }
-                    while (true) {
-//                Data data = audioProcessor.readTargetLine();
-//                        try {
-//                            out.write(data.targetData, 0, data.numBytesRead);
-//                        } catch (IOException ex) {
-//                            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
-//                        }
-//                        try {
-//                            Thread.sleep(500);
-//                        } catch (InterruptedException ex) {
-//                            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
-//                        }
-
-                    }
-                }
-            }).start();
-                    new Thread(new Runnable() {
+            voiceIn = new Thread(new Runnable() {
                 @Override
                 public void run() {
                     while (true) {
-                        data = audioProcessor.readTargetLine();
-//                        audioProcessor.writeAudio();
                         try {
-                            out.write(data.targetData, 0, data.numBytesRead);
-                            System.out.println("server : " + data.numBytesRead);
+                            audioProcessor.readTargetLine();
+                            in.read(audioProcessor.getTargetData(), 0, audioProcessor.getNumBytesRead());
+//                            System.out.println("client :" + audioProcessor.getNumBytesRead());
+                            audioProcessor.writeAudio();
                         } catch (IOException ex) {
                             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
                 }
-            }).start();
+            });
+            textIn = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while (true) {
+                        try {
+                            Thread.sleep(400);
+                            msg = in.readUTF();
+                            if (msg.equalsIgnoreCase("exit")) {
+                                break;
+                            }
+                            System.out.println("Server: " + msg);
+                        } catch (Exception ex) {
+                            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                }
+            });
 
-            InputStream inFromServer = client.getInputStream();
-            DataInputStream in = new DataInputStream(inFromServer);
-            String msg = null;
-            while (true) {
-//                Thread.sleep(400);
-//                msg = in.readUTF();
-//                if (msg.equalsIgnoreCase("exit")) {
-//                    break;
-//                }
-//                System.out.println("Server: " + msg);
-
-                audioProcessor.readTargetLine();
-                in.read(audioProcessor.getTargetData(), 0, audioProcessor.getNumBytesRead());
-                System.out.println("client :" + audioProcessor.getNumBytesRead());
-                audioProcessor.writeAudio();
-            }
-      
+            textOut = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while (clientScanner.hasNextLine()) {
+                        try {
+                            msg = clientScanner.nextLine();
+                            if (msg.equalsIgnoreCase("exit")) {
+                                break;
+                            }
+                            out.writeUTF(msg);
+                        } catch (IOException ex) {
+                            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                }
+            });
+            voiceOut = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while (true) {
+                        data = audioProcessor.readTargetLine();
+                        try {
+                            out.write(data.targetData, 0, data.numBytesRead);
+                        } catch (IOException ex) {
+                            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                }
+            });
 //            client.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -108,6 +109,12 @@ public class Client {
 
     public static void main(String args[]) {
 
-        new Client().runClient();
+        Client client = new Client();
+        client.runClient();
+        client.voiceIn.start();
+//        client.textIn.start();
+//        client.textOut.start();
+//        client.voiceOut.start();
+
     }
 }

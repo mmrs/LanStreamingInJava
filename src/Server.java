@@ -34,7 +34,6 @@ public class Server {
     public void runServer() {
         Scanner serverScanner = new Scanner(System.in);
         AudioProcessor audioProcessor = new AudioProcessor();
-//        AudioProcessor1 audioProcessor1 = new AudioProcessor1();
         try {
             System.out.println("SERVER SITE");
             System.out.println("Waiting for client on port " + serverSocket.getLocalPort() + ".");
@@ -48,10 +47,8 @@ public class Server {
                 public void run() {
                     while (true) {
                         data = audioProcessor.readTargetLine();
-//                audioProcessor.writeAudio();
                         try {
                             out.write(data.targetData, 0, data.numBytesRead);
-//                            System.out.println("server : " + data.numBytesRead);
                         } catch (IOException ex) {
                             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
                         }
